@@ -23,19 +23,13 @@ def menu2():
     m.add(InlineKeyboardButton("‹ В меню", callback_data="tomenu"))
     return m
 
-@bot.message_handler(func=lambda message: message.text == 'hasbik')
-def hasbik(message):
-        bot.send_sticker(message.chat.id,sticker='CAACAgIAAxkBAAEEtqJifWXu_34d0o6GkVsEpaoOGEPgAQACkBkAAqfpQUpLQGC5lMd-WSQE')
-
 @bot.message_handler(func=lambda message: message.text == "/start")
 def mainmenu(message):
     bot.send_message(message.chat.id,
                      '"Цены" - получение цены котировки\n"Добавить в портфель" - добавление котировки в портфель'
                      '\n"Получить портфель" - вывод портфеля и информации о прибыли', reply_markup=menu1())
 
-@bot.message_handler(func=lambda message: message.text != "/start")
-def errormsg(message):
-    bot.send_message(message.chat.id, "Перемещайтесь по меню с помощью встроенных кнопок")
+
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
@@ -129,7 +123,7 @@ def get_stock_case(message):
             else:
                 msg += id + ': Вы потеряли ' + '{:0.3f}'.format(abs(delta)) + ' USD (' + '{:0.1f}'.format(
                                      100 * float(t[1]) / float(s[1]) - 100) + ' %)'+'\n'
-        elif (t == -2 and msg==''):
+        elif (t == -2):
             flag = False
             break
         else:
@@ -167,6 +161,9 @@ def send_ticker(message):
         bot.send_message(message.chat.id, 'Введен некорректный тикер', reply_markup=menu2())
 
 def add_num_of_stocks(message, res):
+    if (message.text == '/start'):
+        mainmenu(message)
+        return
     f = open('text.txt', 'a')
     if ((message.text).isdigit()):
         r = res + ' ' + message.text
