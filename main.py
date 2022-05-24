@@ -185,5 +185,4 @@ def clear_case():
         f = open('text.txt', 'w').close()
         return
 
-
 bot.polling(none_stop=True, interval=0)
