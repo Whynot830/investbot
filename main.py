@@ -1,7 +1,6 @@
 import telebot
-import json
 import requests
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 import os
 
 bot = telebot.TeleBot("5279674502:AAFXF-kDxk_WVVo9Br5YN5PmNQohsR3oxFQ")
@@ -30,52 +29,41 @@ def mainmenu(message):
                      '\n"Получить портфель" - вывод портфеля и информации о прибыли', reply_markup=menu1())
 
 
-
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
+    chatID = call.message.chat.id
+    msgID = call.message.message_id
     try:
         if call.message:
             if call.data == "getprice":
-                bot.edit_message_text('Введите тикер для получения информации',call.message.chat.id,call.message.message_id)
+                bot.edit_message_text('Введите тикер для получения информации',chatID,msgID)
                 bot.answer_callback_query(call.id)
                 bot.register_next_step_handler(call.message, send_ticker)
             elif call.data == "addtocase":
                 c = get_count_of_stocks_case()
                 if (c<5):
-                    bot.edit_message_text("Введите тикер для добавления в портфель", call.message.chat.id,
-                                      call.message.message_id)
+                    bot.edit_message_text("Введите тикер для добавления в портфель", chatID, msgID)
                     bot.answer_callback_query(call.id)
                     bot.register_next_step_handler(call.message, add_stock_case)
                 else:
                     bot.edit_message_text("К сожалению, в текущей версии бота размер портфеля ограничен 5 позициями",
-                                          call.message.chat.id,call.message.message_id,reply_markup=menu2())
+                                          chatID,msgID,reply_markup=menu2())
             elif call.data == "getcase":
-                bot.edit_message_text("Подсчитываю...",call.message.chat.id,call.message.message_id)
+                bot.edit_message_text("Подсчитываю...",chatID,msgID)
                 bot.answer_callback_query(call.id)
                 get_stock_case(call.message)
             elif call.data == "tomenu":
                 bot.edit_message_text(
                     '"Цены" - получение цены котировки\n"Добавить в портфель" - добавление котировки в портфель'
                     '\n"Получить портфель" - вывод портфеля и информации о прибыли',
-                    call.message.chat.id, call.message.message_id, reply_markup=menu1())
+                    chatID, msgID, reply_markup=menu1())
                 bot.answer_callback_query(call.id)
             elif call.data == "clear":
                 clear_case()
-                bot.edit_message_text("Данные портфеля очищены\n",call.message.chat.id,call.message.message_id,reply_markup=menu2())
+                bot.edit_message_text("Данные портфеля очищены\n",chatID,msgID,reply_markup=menu2())
     except Exception as e:
         print(repr(e))
 
-def get_current_price(id):
-    url = 'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=' + id + '&interval=1min&apikey=GA64HKYKKJO0LUUU'
-    try:
-        r = requests.get(url)
-        data = r.json()
-        if 'Note' in data: return (-2)
-        r1 = data['Time Series (1min)'][data['Meta Data']['3. Last Refreshed']]['4. close']
-        res = id + ' ' + r1
-        return (res.split(' '))
-    except:
-        return (-1)
 
 def add_stock_case(message):
     if (message.text == '/start'):
@@ -98,6 +86,8 @@ def add_stock_case(message):
         bot.register_next_step_handler(message, add_num_of_stocks, res)
     except:
         bot.send_message(message.chat.id, 'Некорректный тикер.',reply_markup=menu2())
+
+
 
 def get_stock_case(message):
     f = open('text.txt', 'r')
@@ -137,6 +127,18 @@ def get_stock_case(message):
         bot.send_message(message.chat.id,
                          "К сожалению, в данной версии бота присутствует ограничение, равное 5 запросов в минуту",
                          reply_markup=menu2())
+
+def get_current_price(id):
+    url = 'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=' + id + '&interval=1min&apikey=GA64HKYKKJO0LUUU'
+    try:
+        r = requests.get(url)
+        data = r.json()
+        if 'Note' in data: return (-2)
+        r1 = data['Time Series (1min)'][data['Meta Data']['3. Last Refreshed']]['4. close']
+        res = id + ' ' + r1
+        return (res.split(' '))
+    except:
+        return (-1)
 
 def send_ticker(message):
     if (message.text == '/start'):
